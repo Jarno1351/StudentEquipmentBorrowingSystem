@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\StudentBorrowEquipSystem.Application\StudentBorrowEquipSystem.Application.csproj" />
+    <ProjectReference Include="..\StudentEquipBorrowSystem.Domain\StudentEquipBorrowSystem.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

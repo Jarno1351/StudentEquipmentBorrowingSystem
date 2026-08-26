@@ -2,9 +2,12 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace StudentEquipBorrowSystem.Domain
+namespace Domain
 {
-    internal class BorrowStatusEnum
+    public enum BorrowStatusEnum
     {
+        Active,
+        Returned,
+        Overdue
     }
 }

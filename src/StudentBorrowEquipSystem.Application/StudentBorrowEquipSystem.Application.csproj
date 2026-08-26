@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\StudentEquipBorrowSystem.Domain\StudentEquipBorrowSystem.Domain.csproj" />
+  </ItemGroup>
+
 </Project>
