@@ -50,7 +50,6 @@ namespace Infrastructure
             if (existing == null)
                 throw new InvalidOperationException($"Borrow record {borrow.Id} was not found.");
 
-            // Borrow's properties are private-set, so replace rather than mutate in place.
             _borrows.Remove(existing);
             _borrows.Add(borrow);
         }
