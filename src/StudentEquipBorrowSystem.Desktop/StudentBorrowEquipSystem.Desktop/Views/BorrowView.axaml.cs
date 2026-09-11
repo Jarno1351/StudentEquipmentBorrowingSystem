@@ -4,9 +4,9 @@ using Avalonia.Markup.Xaml;
 
 namespace StudentBorrowEquipSystem.Desktop.Views
 {
-    public partial class EquipmentView : UserControl
+    public partial class BorrowView : UserControl
     {
-        public EquipmentView()
+        public BorrowView()
         {
             InitializeComponent();
         }

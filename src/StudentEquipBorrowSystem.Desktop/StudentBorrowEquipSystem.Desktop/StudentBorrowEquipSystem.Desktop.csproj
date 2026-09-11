@@ -25,6 +25,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Views\BorrowView.axaml.cs">
+      <DependentUpon>BorrowView.axaml</DependentUpon>
+    </Compile>
     <Compile Update="Views\EquipmentView.axaml.cs">
       <DependentUpon>EquipmentView.axaml</DependentUpon>
     </Compile>
