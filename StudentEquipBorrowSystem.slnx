@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="src/StudentBorrowEquipSystem.Application/StudentBorrowEquipSystem.Application.csproj" Id="df89a2fa-47f4-4104-b150-448b63b5a829" />
+  <Project Path="src/StudentEquipBorrowSystem.Desktop/StudentBorrowEquipSystem.Desktop/StudentBorrowEquipSystem.Desktop.csproj" Id="b1fa6847-c126-4773-ab86-ad6fae65a333" />
   <Project Path="src/StudentEquipBorrowSystem.Domain/StudentEquipBorrowSystem.Domain.csproj" Id="79471c72-0a07-4af5-93ed-67c433d48d37" />
   <Project Path="src/StudentEquipBorrowSystem.Infrastructure/StudentEquipBorrowSystem.Infrastructure.csproj" Id="ddb6bc99-fbf6-4bd5-8d79-dd136928a9ea" />
   <Project Path="tests/TestProgram/TestProgram.csproj" Id="d2c02b36-c26c-408b-9994-f0f25b9c2eb1" />
