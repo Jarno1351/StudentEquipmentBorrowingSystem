@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Application;
+using Applications;
 using Domain;
 
 namespace Infrastructure

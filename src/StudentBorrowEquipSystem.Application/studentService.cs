@@ -1,6 +1,6 @@
 ﻿using Domain;
 
-namespace Application
+namespace Applications
 {
     public class StudentService
     {

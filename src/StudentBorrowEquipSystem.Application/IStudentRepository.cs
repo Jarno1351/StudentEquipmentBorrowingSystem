@@ -1,7 +1,7 @@
 ﻿using Domain;
 using System.Collections.Generic;
 
-namespace Application
+namespace Applications
 {
     public interface IStudentRepository
     {
