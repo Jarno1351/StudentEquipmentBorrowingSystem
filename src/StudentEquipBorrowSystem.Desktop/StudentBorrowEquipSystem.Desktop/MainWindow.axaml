@@ -1,5 +1,6 @@
 ﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="clr-namespace:StudentBorrowEquipSystem.Desktop.Views;assembly=StudentBorrowEquipSystem.Desktop"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
@@ -57,12 +58,33 @@
         <Border
             Grid.Row="1"
             Grid.Column="1"
-            Padding="30">
+            Padding="12">
 
-            <TextBlock
-                Text="Equipment"
-                FontSize="28"
-                FontWeight="Bold"/>
+            <TabControl>
+                <TabItem Header="Borrow">
+                    <views:BorrowView DataContext="{Binding BorrowingVM}" />
+                </TabItem>
+                <TabItem Header="Active Borrowings">
+                    <ScrollViewer>
+                        <StackPanel>
+                            <ListBox Items="{Binding ActiveBorrowingsVM.ActiveBorrowings}"
+                                     SelectedItem="{Binding ActiveBorrowingsVM.SelectedBorrow}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Spacing="12">
+                                            <TextBlock Text="{Binding StudentName}" Width="150" />
+                                            <TextBlock Text="{Binding EquipmentName}" Width="150" />
+                                            <TextBlock Text="{Binding BorrowDate, StringFormat='{}{0:yyyy-MM-dd}'}" Width="110" />
+                                            <TextBlock Text="{Binding DueDate, StringFormat='{}{0:yyyy-MM-dd}'}" Width="110" />
+                                            <Button Content="Return" Command="{Binding DataContext.ReturnSelected, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+            </TabControl>
 
         </Border>
 
