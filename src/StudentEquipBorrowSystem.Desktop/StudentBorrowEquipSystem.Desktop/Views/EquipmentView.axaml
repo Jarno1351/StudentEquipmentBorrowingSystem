@@ -1,10 +1,76 @@
-<Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-  <Design.PreviewWith>
-    <Border Padding="20">
-      <!-- Add Controls for Previewer Here -->
-    </Border>
-  </Design.PreviewWith>
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:StudentBorrowEquipSystem.Desktop.ViewModels;assembly=StudentBorrowEquipSystem.Desktop"
+    x:Class="StudentBorrowEquipSystem.Desktop.Views.EquipmentView"
+    x:DataType="vm:EquipmentViewModel">
 
-  <!-- Add Styles Here -->
-</Styles>
+    <StackPanel Spacing="20">
+
+        <!-- Page Header -->
+        <StackPanel Spacing="5">
+
+            <TextBlock
+                Text="Equipment"
+                FontSize="28"
+                FontWeight="Bold"/>
+
+            <TextBlock
+                Text="View available campus equipment."/>
+
+        </StackPanel>
+
+
+        <!-- Equipment List -->
+        <ItemsControl ItemsSource="{Binding Equipment}">
+
+            <ItemsControl.ItemTemplate>
+
+                <DataTemplate x:DataType="vm:EquipmentItemViewModel">
+
+            <Border
+                Padding="15"
+                Margin="0,5"
+                BorderThickness="1">
+
+                <Grid ColumnDefinitions="180,*,150">
+
+                    <!-- ID -->
+                    <TextBlock
+                        Grid.Column="0"
+                        Text="{Binding Id}"
+                        VerticalAlignment="Center"/>
+
+                    <!-- Equipment Information -->
+                    <StackPanel Grid.Column="1">
+
+                        <TextBlock
+                            Text="{Binding EquipmentName}"
+                            FontSize="18"
+                            FontWeight="Bold"/>
+
+                        <TextBlock
+                            Text="{Binding EquipmentType}"/>
+
+                    </StackPanel>
+
+                    <!-- Availability -->
+                    <TextBlock
+                        Grid.Column="2"
+                        Text="{Binding IsAvailable}"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"/>
+
+                </Grid>
+
+            </Border>
+
+        </DataTemplate>
+
+    </ItemsControl.ItemTemplate>
+
+</ItemsControl>
+
+    </StackPanel>
+
+</UserControl>

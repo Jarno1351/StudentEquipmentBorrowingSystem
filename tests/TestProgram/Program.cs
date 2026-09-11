@@ -1,6 +1,6 @@
 ﻿using System;
 using Domain;
-using Application;
+using Applications;
 using Infrastructure;
 
 namespace ConsoleDemo

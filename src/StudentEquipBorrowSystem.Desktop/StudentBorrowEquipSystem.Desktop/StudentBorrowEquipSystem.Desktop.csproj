@@ -23,4 +23,10 @@
     <ProjectReference Include="..\..\StudentBorrowEquipSystem.Application\StudentBorrowEquipSystem.Application.csproj" />
     <ProjectReference Include="..\..\StudentEquipBorrowSystem.Infrastructure\StudentEquipBorrowSystem.Infrastructure.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Views\EquipmentView.axaml.cs">
+      <DependentUpon>EquipmentView.axaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
 </Project>

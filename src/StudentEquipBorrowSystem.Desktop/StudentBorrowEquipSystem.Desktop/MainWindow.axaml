@@ -2,33 +2,70 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d"
+        d:DesignWidth="1000"
+        d:DesignHeight="650"
         x:Class="StudentBorrowEquipSystem.Desktop.MainWindow"
         Title="Student Borrow Equipment System">
 
-    <Grid 
-        RowDefinitions="Auto, *" 
-        ColumnDefinitions="200, *">
-    
-    <!-- Header (Row 0, Column 0) -->
-    <TextBlock  Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
-               Text="Student Borrowing Equipment System" 
-               FontSize="36"
-               FontWeight="Bold"
-               TextAlignment="Center"
-               HorizontalAlignment="Center"
-               Foreground="#E63946"
-               Margin="16,12,16,12"
-               FontFamily="Poppins"/>
-    
+    <Grid
+        RowDefinitions="Auto,*"
+        ColumnDefinitions="200,*">
 
-    <!-- Sidebar Content  -->
-   <StackPanel Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center" Orientation="Vertical" Spacing="16">
-    <Button Content="Equipment" />
-    <Button Content="Borrowing" />
-    </StackPanel>
-    <!-- Main Content-->
-    <TextBox Grid.Row="1" Grid.Column="1" Text="Main Content Area" />
+        <!-- HEADER -->
+        <TextBlock
+            Grid.Row="0"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Text="Student Borrowing Equipment System"
+            FontSize="36"
+            FontWeight="Bold"
+            TextAlignment="Center"
+            HorizontalAlignment="Center"
+            Foreground="#E63946"
+            Margin="16,12"
+            FontFamily="Poppins"/>
 
-</Grid>
+
+        <!-- SIDEBAR -->
+        <Border
+            Grid.Row="1"
+            Grid.Column="0"
+            Padding="26">
+
+            <StackPanel
+                VerticalAlignment="Center"
+                HorizontalAlignment="Center"
+                Spacing="16">
+
+                <Button
+                    Content="Equipment"
+                    Width="160"
+                    Height="45"/>
+
+                <Button
+                    Content="Active Borrowings"
+                    Width="160"
+                    Height="45"/>
+
+            </StackPanel>
+
+        </Border>
+
+
+        <!-- MAIN CONTENT -->
+        <Border
+            Grid.Row="1"
+            Grid.Column="1"
+            Padding="30">
+
+            <TextBlock
+                Text="Equipment"
+                FontSize="28"
+                FontWeight="Bold"/>
+
+        </Border>
+
+    </Grid>
+
 </Window>
