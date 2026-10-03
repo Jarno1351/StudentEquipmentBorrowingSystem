@@ -1,8 +1,16 @@
 # Student Equipment Borrowing System
 
-A layered (Clean/Onion-style) console application demonstrating a student borrowing
-equipment from a school inventory, with validation handled entirely by the
-application service rather than the UI or the database.
+A layered (Clean/Onion-style) application demonstrating a student borrowing
+equipment from a school inventory. Validation and business rules are handled by
+the Application layer (application services); the UI and Infrastructure provide
+composition and persistence only.
+
+This repository contains:
+- Domain: core entities and invariants
+- Application: use-case services and repository interfaces
+- Infrastructure: concrete repository implementations (in-memory by default)
+- An Avalonia Desktop UI located at `src/StudentEquipBorrowSystem.Desktop`
+- A test/executable project at `tests/TestProgram`
 
 ## 1. Solution Structure
 
