@@ -7,7 +7,7 @@ using System.Collections.ObjectModel;
 
 namespace StudentBorrowEquipSystem.Desktop.ViewModels;
 
-public partial class BorrowingViewModel : ObservableObject
+public partial class BorrowingViewModel : ViewModelBase
 {
     private readonly IBorrowAppService _borrowAppService;
     private readonly ILookupAppService _lookupService;
@@ -16,33 +16,55 @@ public partial class BorrowingViewModel : ObservableObject
     public ObservableCollection<EquipmentDto> Equipment { get; } = new();
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ValidationMessage))]
+    [NotifyPropertyChangedFor(nameof(HasValidationMessage))]
+    [NotifyCanExecuteChangedFor(nameof(BorrowCommand))]
     private StudentDto? selectedStudent;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ValidationMessage))]
+    [NotifyPropertyChangedFor(nameof(HasValidationMessage))]
+    [NotifyCanExecuteChangedFor(nameof(BorrowCommand))]
     private EquipmentDto? selectedEquipment;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ValidationMessage))]
+    [NotifyPropertyChangedFor(nameof(HasValidationMessage))]
+    [NotifyCanExecuteChangedFor(nameof(BorrowCommand))]
     private DateTime? dueDate;
 
-    [ObservableProperty]
-    private string? statusMessage;
+    // Presentation/input validation only. Business rules (limit, availability) stay in Application/Domain.
+    public string? ValidationMessage =>
+        SelectedStudent == null ? "Please select a student." :
+        SelectedEquipment == null ? "Please select equipment." :
+        DueDate == null ? "Please select a due date." :
+        DueDate.Value.Date < DateTime.Today ? "Due date cannot be in the past." :
+        null;
 
-    public BorrowingViewModel(
-        IBorrowAppService borrowAppService,
-        ILookupAppService lookupService)
+    public bool HasValidationMessage => ValidationMessage != null;
+
+    public BorrowingViewModel(IBorrowAppService borrowAppService, ILookupAppService lookupService)
     {
         _borrowAppService = borrowAppService;
         _lookupService = lookupService;
+        LoadStudents();
+        LoadEquipment();
+    }
 
+    public override void OnNavigatedTo()
+    {
         LoadStudents();
         LoadEquipment();
     }
 
     private void LoadStudents()
     {
+        var keep = SelectedStudent?.StudentID;
         Students.Clear();
         foreach (var s in _lookupService.GetAllStudents())
             Students.Add(s);
+        if (keep != null)
+            foreach (var s in Students) if (s.StudentID == keep) SelectedStudent = s;
     }
 
     private void LoadEquipment()
@@ -52,37 +74,34 @@ public partial class BorrowingViewModel : ObservableObject
             Equipment.Add(e);
     }
 
-    [RelayCommand]
+    private bool CanBorrow() => ValidationMessage == null;
+
+    [RelayCommand(CanExecute = nameof(CanBorrow))]
     private void Borrow()
     {
-        if (SelectedStudent == null)
-        {
-            StatusMessage = "Please select a student.";
-            return;
-        }
+        var problem = ValidationMessage;
+        if (problem != null) { ShowError(problem); return; }
 
-        if (SelectedEquipment == null)
+        try
         {
-            StatusMessage = "Please select equipment.";
-            return;
-        }
+            var result = _borrowAppService.BorrowEquipment(
+                SelectedStudent!.StudentID, SelectedEquipment!.Id, DueDate!.Value);
 
-        if (DueDate == null)
-        {
-            StatusMessage = "Please select an expected return date.";
-            return;
+            if (result.Success)
+            {
+                LoadEquipment();
+                SelectedEquipment = null;
+                DueDate = null;
+                ShowSuccess("Equipment borrowed successfully.");
+            }
+            else
+            {
+                ShowError(result.Message ?? "Borrow failed.");
+            }
         }
-
-        var result = _borrowAppService.BorrowEquipment(SelectedStudent.StudentID, SelectedEquipment.Id, DueDate.Value);
-
-        if (result.Success)
+        catch (Exception ex)
         {
-            StatusMessage = $"Successfully borrowed {SelectedEquipment.EquipmentName}. Due: {result.DueDate:yyyy-MM-dd}";
-            LoadEquipment();
-        }
-        else
-        {
-            StatusMessage = result.Message ?? "Borrow failed.";
+            ShowError($"Unexpected error: {ex.Message}");
         }
     }
 }

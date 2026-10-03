@@ -33,5 +33,16 @@ namespace Applications
                 EquipmentName = e.EquipmentName
             });
         }
+
+        public IEnumerable<EquipmentItemDto> GetEquipmentItems()
+        {
+            return _equipmentRepository.GetAll().Select(e => new EquipmentItemDto
+            {
+                Id = e.Id,
+                EquipmentName = e.EquipmentName,
+                EquipmentType = e.EquipmentType,
+                IsAvailable = e.IsAvailable
+            });
+        }
     }
 }

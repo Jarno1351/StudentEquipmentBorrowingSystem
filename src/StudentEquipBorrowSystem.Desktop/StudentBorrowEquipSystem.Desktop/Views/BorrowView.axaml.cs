@@ -1,19 +1,10 @@
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
 
 namespace StudentBorrowEquipSystem.Desktop.Views
 {
     public partial class BorrowView : UserControl
     {
-        public BorrowView()
-        {
-            InitializeComponent();
-            // Resolve ViewModel from the application service provider
-            if (App.Services != null)
-            {
-                this.DataContext = App.Services.GetService(typeof(StudentBorrowEquipSystem.Desktop.ViewModels.BorrowingViewModel));
-            }
-        }
+        // DataContext is supplied by the ViewModel->View DataTemplate (App.axaml).
+        public BorrowView() => InitializeComponent();
     }
 }

@@ -1,54 +1,63 @@
-﻿using Avalonia;
+using Applications;
+using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using Microsoft.Extensions.DependencyInjection;
-using Applications;
 using Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
+using StudentBorrowEquipSystem.Desktop.Navigation;
 using StudentBorrowEquipSystem.Desktop.ViewModels;
+using System;
 
 namespace StudentBorrowEquipSystem.Desktop;
 
-public partial class App : Application
+public partial class App : Avalonia.Application
 {
-    public static IServiceProvider Services { get; private set; } = null!;
-
-    public override void Initialize()
-    {
-        AvaloniaXamlLoader.Load(this);
-    }
+    public override void Initialize() => AvaloniaXamlLoader.Load(this);
 
     public override void OnFrameworkInitializationCompleted()
     {
-        // Configure DI
-        var services = new ServiceCollection();
+        // ---- Composition root: the ONLY place dependencies are wired ----
+        var provider = ConfigureServices();
 
-        // Infrastructure repositories
-        services.AddSingleton<IStudentRepository, StudentInMemoryRepository>();
-        services.AddSingleton<IEquipmentRepository, EquipmentInMemoryRepository>();
-        services.AddSingleton<IBorrowRepository, BorrowInMemoryRepository>();
-
-        // Domain/application services
-        services.AddSingleton<IBorrowService, BorrowService>();
-        services.AddSingleton<IBorrowAppService, BorrowAppService>();
-        services.AddSingleton<ILookupAppService, LookupAppService>();
-
-        // ViewModels
-        services.AddSingleton<MainWindowViewModel>();
-        services.AddSingleton<BorrowingViewModel>();
-        services.AddSingleton<ActiveBorrowingsViewModel>();
-        services.AddSingleton<EquipmentViewModel>();
-
-        Services = services.BuildServiceProvider();
+        // Demo data (seeded through repository interfaces; Domain stays out of Desktop)
+        DemoDataSeeder.Seed(
+            provider.GetRequiredService<IStudentRepository>(),
+            provider.GetRequiredService<IEquipmentRepository>());
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var mainVm = Services.GetRequiredService<MainWindowViewModel>();
             desktop.MainWindow = new MainWindow
             {
-                DataContext = mainVm
+                DataContext = provider.GetRequiredService<MainWindowViewModel>()
             };
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private static IServiceProvider ConfigureServices()
+    {
+        IServiceCollection services = new ServiceCollection();
+
+        // Repositories (Infrastructure)
+        services.AddSingleton<IStudentRepository, StudentInMemoryRepository>();
+        services.AddSingleton<IEquipmentRepository, EquipmentInMemoryRepository>();
+        services.AddSingleton<IBorrowRepository, BorrowInMemoryRepository>();
+
+        // Application services
+        services.AddSingleton<IBorrowService, BorrowService>();
+        services.AddSingleton<IBorrowAppService, BorrowAppService>();
+        services.AddSingleton<ILookupAppService, LookupAppService>();
+
+        // Navigation
+        services.AddSingleton<INavigationService, NavigationService>();
+
+        // ViewModels (singletons keep form state when switching pages; data is refreshed in OnNavigatedTo)
+        services.AddSingleton<MainWindowViewModel>();
+        services.AddSingleton<EquipmentViewModel>();
+        services.AddSingleton<BorrowingViewModel>();
+        services.AddSingleton<ActiveBorrowingsViewModel>();
+
+        return services.BuildServiceProvider();
     }
 }

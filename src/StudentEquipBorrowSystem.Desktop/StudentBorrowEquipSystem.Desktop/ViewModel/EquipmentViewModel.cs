@@ -1,36 +1,33 @@
 using Applications;
-using CommunityToolkit.Mvvm.ComponentModel;
-using Domain;
 using System.Collections.ObjectModel;
 
 namespace StudentBorrowEquipSystem.Desktop.ViewModels;
 
-
-public partial class EquipmentViewModel : ObservableObject
+public partial class EquipmentViewModel : ViewModelBase
 {
-    private readonly IEquipmentRepository _equipmentRepository;
+    private readonly ILookupAppService _lookupService;
 
     public ObservableCollection<EquipmentItemViewModel> Equipment { get; } = new();
 
-    public EquipmentViewModel(IEquipmentRepository equipmentRepository)
+    public EquipmentViewModel(ILookupAppService lookupService)
     {
-        _equipmentRepository = equipmentRepository;
-
+        _lookupService = lookupService;
         LoadEquipment();
     }
+
+    public override void OnNavigatedTo() => LoadEquipment();
 
     private void LoadEquipment()
     {
         Equipment.Clear();
-
-        foreach (var equipment in _equipmentRepository.GetAll())
+        foreach (var e in _lookupService.GetEquipmentItems())
         {
             Equipment.Add(new EquipmentItemViewModel
             {
-                Id = equipment.Id,
-                EquipmentName = equipment.EquipmentName,
-                EquipmentType = equipment.EquipmentType,
-                IsAvailable = equipment.IsAvailable
+                Id = e.Id,
+                EquipmentName = e.EquipmentName,
+                EquipmentType = e.EquipmentType,
+                IsAvailable = e.IsAvailable
             });
         }
     }

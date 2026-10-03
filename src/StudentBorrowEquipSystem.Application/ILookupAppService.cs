@@ -7,5 +7,6 @@ namespace Applications
     {
         IEnumerable<StudentDto> GetAllStudents();
         IEnumerable<EquipmentDto> GetAllEquipment();
+        IEnumerable<EquipmentItemDto> GetEquipmentItems();
     }
 }

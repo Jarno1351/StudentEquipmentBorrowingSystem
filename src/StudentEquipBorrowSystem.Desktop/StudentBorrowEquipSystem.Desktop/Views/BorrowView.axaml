@@ -1,72 +1,53 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="clr-namespace:StudentBorrowEquipSystem.Desktop.ViewModels;assembly=StudentBorrowEquipSystem.Desktop"
-             xmlns:app="clr-namespace:Applications.Dto;assembly=StudentBorrowEquipSystem.Application"
+             xmlns:vm="using:StudentBorrowEquipSystem.Desktop.ViewModels"
+             xmlns:dto="using:Applications.Dto"
              x:Class="StudentBorrowEquipSystem.Desktop.Views.BorrowView"
              x:DataType="vm:BorrowingViewModel">
 
-  <StackPanel Spacing="16" Margin="12">
+    <StackPanel Spacing="16" HorizontalAlignment="Left" MaxWidth="560">
+        <TextBlock Classes="pageHeader" Text="Borrow Equipment" />
 
-    <!-- Header -->
-    <TextBlock Text="Borrow Equipment" FontSize="26" FontWeight="Bold" />
+        <Border Classes="card">
+            <StackPanel Spacing="10">
+                <TextBlock Classes="label" Text="Student" />
+                <ComboBox ItemsSource="{Binding Students}"
+                          SelectedItem="{Binding SelectedStudent}"
+                          PlaceholderText="Select student">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="dto:StudentDto">
+                            <TextBlock Text="{Binding FullName}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
 
-    <!-- Main area: two columns (1:3) -->
-    <Grid ColumnDefinitions="1*,3*" RowDefinitions="Auto">
+                <TextBlock Classes="label" Text="Equipment" Margin="0,6,0,0" />
+                <ComboBox ItemsSource="{Binding Equipment}"
+                          SelectedItem="{Binding SelectedEquipment}"
+                          PlaceholderText="Select equipment">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="dto:EquipmentDto">
+                            <TextBlock Text="{Binding EquipmentName}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
 
-      <!-- Left: selectors -->
-        <StackPanel Grid.Column="0" Spacing="8">
-        <TextBlock Text="Select Student" FontWeight="SemiBold" />
-        <ComboBox ItemsSource="{Binding Students}"
-                  SelectedItem="{Binding SelectedStudent}"
-                  PlaceholderText="Choose a student">
-          <ComboBox.ItemTemplate>
-            <DataTemplate x:DataType="app:StudentDto">
-              <TextBlock Text="{Binding FullName}" />
-            </DataTemplate>
-          </ComboBox.ItemTemplate>
-        </ComboBox>
+                <TextBlock Classes="label" Text="Due Date" Margin="0,6,0,0" />
+                <CalendarDatePicker SelectedDate="{Binding DueDate}" Watermark="Select date" />
 
-        <TextBlock Text="Select Equipment" FontWeight="SemiBold" Margin="0,8,0,0" />
-        <ComboBox ItemsSource="{Binding Equipment}"
-                  SelectedItem="{Binding SelectedEquipment}"
-                  PlaceholderText="Choose equipment">
-          <ComboBox.ItemTemplate>
-            <DataTemplate x:DataType="app:EquipmentDto">
-              <TextBlock Text="{Binding EquipmentName}" />
-            </DataTemplate>
-          </ComboBox.ItemTemplate>
-        </ComboBox>
+                <Button Classes="primary" Content="Borrow Equipment"
+                        Command="{Binding BorrowCommand}" Margin="0,12,0,0"
+                        HorizontalAlignment="Left" />
 
-        <TextBlock Text="Expected Return Date" FontWeight="SemiBold" Margin="0,8,0,0" />
-        <DatePicker SelectedDate="{Binding DueDate}" />
+                <!-- input validation hint (why the button is disabled) -->
+                <TextBlock Classes="hint" Text="{Binding ValidationMessage}"
+                           IsVisible="{Binding HasValidationMessage}" />
 
-        <Button Content="Borrow Equipment"
-                Command="{Binding BorrowCommand}"
-                Margin="0,12,0,0" />
-      </StackPanel>
-
-      <!-- Right: details / status -->
-      <StackPanel Grid.Column="1" Spacing="8">
-        <TextBlock Text="Details" FontWeight="SemiBold" />
-
-        <Border Padding="12" BorderThickness="1" CornerRadius="4">
-          <StackPanel Spacing="6">
-            <TextBlock Text="Selected Student:" FontWeight="Bold" />
-            <TextBlock Text="{Binding SelectedStudent.FullName}" />
-
-            <TextBlock Text="Selected Equipment:" FontWeight="Bold" Margin="0,8,0,0" />
-            <TextBlock Text="{Binding SelectedEquipment.EquipmentName}" />
-
-            <TextBlock Text="Due Date:" FontWeight="Bold" Margin="0,8,0,0" />
-            <TextBlock Text="{Binding DueDate, StringFormat='{}{0:yyyy-MM-dd}'}" />
-          </StackPanel>
+                <!-- operation result (success or business/application error) -->
+                <TextBlock Text="{Binding StatusMessage}" IsVisible="{Binding HasStatus}"
+                           Classes.error="{Binding IsError}"
+                           Classes.success="{Binding !IsError}" />
+            </StackPanel>
         </Border>
-
-        <TextBlock Text="{Binding StatusMessage}" Foreground="Red" Margin="0,12,0,0" />
-      </StackPanel>
-
-    </Grid>
-
-  </StackPanel>
-
+    </StackPanel>
 </UserControl>

@@ -7,27 +7,38 @@ using System.Collections.ObjectModel;
 
 namespace StudentBorrowEquipSystem.Desktop.ViewModels;
 
-public partial class ActiveBorrowingsViewModel : ObservableObject
+public partial class ActiveBorrowingsViewModel : ViewModelBase
 {
     private readonly IBorrowAppService _borrowAppService;
 
     public ObservableCollection<BorrowDto> ActiveBorrowings { get; } = new();
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ValidationMessage))]
+    [NotifyPropertyChangedFor(nameof(HasValidationMessage))]
+    [NotifyCanExecuteChangedFor(nameof(ReturnSelectedCommand))]
     private BorrowDto? selectedBorrow;
 
     [ObservableProperty]
-    private DateTime? returnDate;
+    [NotifyPropertyChangedFor(nameof(ValidationMessage))]
+    [NotifyPropertyChangedFor(nameof(HasValidationMessage))]
+    [NotifyCanExecuteChangedFor(nameof(ReturnSelectedCommand))]
+    private DateTime? returnDate = DateTime.Today;
 
-    [ObservableProperty]
-    private string? statusMessage;
+    public string? ValidationMessage =>
+        SelectedBorrow == null ? "Please select an active borrowing." :
+        ReturnDate == null ? "Please select a return date." :
+        null;
+
+    public bool HasValidationMessage => ValidationMessage != null;
 
     public ActiveBorrowingsViewModel(IBorrowAppService borrowAppService)
     {
         _borrowAppService = borrowAppService;
         LoadActiveBorrowings();
-        ReturnDate = DateTime.Now;
     }
+
+    public override void OnNavigatedTo() => LoadActiveBorrowings();
 
     public void LoadActiveBorrowings()
     {
@@ -36,27 +47,31 @@ public partial class ActiveBorrowingsViewModel : ObservableObject
             ActiveBorrowings.Add(b);
     }
 
-    [RelayCommand]
+    private bool CanReturn() => ValidationMessage == null;
+
+    [RelayCommand(CanExecute = nameof(CanReturn))]
     private void ReturnSelected()
     {
-        if (SelectedBorrow == null)
+        var problem = ValidationMessage;
+        if (problem != null) { ShowError(problem); return; }
+
+        try
         {
-            StatusMessage = "Please select a borrowing record.";
-            return;
+            var result = _borrowAppService.ReturnEquipment(SelectedBorrow!.BorrowId, ReturnDate!.Value);
+
+            if (result.Success)
+            {
+                LoadActiveBorrowings();
+                ShowSuccess("Equipment returned successfully.");
+            }
+            else
+            {
+                ShowError(result.Message ?? "Return failed.");
+            }
         }
-
-        var date = ReturnDate ?? DateTime.Now;
-
-        var result = _borrowAppService.ReturnEquipment(SelectedBorrow.BorrowId, date);
-
-        if (result.Success)
+        catch (Exception ex)
         {
-            StatusMessage = "Equipment returned successfully.";
-            LoadActiveBorrowings();
-        }
-        else
-        {
-            StatusMessage = result.Message ?? "Return failed.";
+            ShowError($"Unexpected error: {ex.Message}");
         }
     }
 }
