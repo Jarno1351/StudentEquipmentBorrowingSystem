@@ -10,6 +10,14 @@ namespace ConsoleDemo
     {
         public static async Task Main(string[] args)
         {
+            // dotnet run --project tests/TestProgram -- --sql
+            // prints the SQL that EF Core generates for the LINQ queries (SQLite, throw-away database).
+            if (args.Length > 0 && args[0] == "--sql")
+            {
+                await SqlInspection.RunAsync();
+                return;
+            }
+
             Console.WriteLine("=== Student Equipment Borrowing System — Demo ===\n");
 
             // ---- Composition root: repositories & service ----
