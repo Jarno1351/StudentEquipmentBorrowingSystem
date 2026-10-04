@@ -4,6 +4,7 @@ using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Threading.Tasks;
 
 namespace Infrastructure
 {
@@ -29,13 +30,24 @@ namespace Infrastructure
         }
 
         /// <summary>
-        /// Applies pending EF Core migrations (creates the database on first run).
+        /// Startup initialization, in two non-destructive steps:
+        ///   1. Apply pending EF Core migrations (creates the database on first run, does nothing afterwards).
+        ///   2. Add any missing demo data. Existing data is never deleted or overwritten.
         /// Lives in Infrastructure so the Desktop project needs no EF Core types.
         /// </summary>
         public static void InitializeDatabase(this IServiceProvider provider)
         {
-            var context = provider.GetRequiredService<EquipmentBorrowingDbContext>();
-            context.Database.Migrate();
+            // Runs on a thread-pool thread so blocking here can never deadlock on the UI thread.
+            Task.Run(async () =>
+            {
+                var context = provider.GetRequiredService<EquipmentBorrowingDbContext>();
+                await context.Database.MigrateAsync();
+
+                await DemoDataSeeder.SeedAsync(
+                    provider.GetRequiredService<IStudentRepository>(),
+                    provider.GetRequiredService<IEquipmentRepository>(),
+                    provider.GetRequiredService<IBorrowRepository>());
+            }).GetAwaiter().GetResult();
         }
     }
 }

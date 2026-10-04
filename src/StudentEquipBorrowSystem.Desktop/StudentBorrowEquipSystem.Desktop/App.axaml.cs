@@ -20,13 +20,9 @@ public partial class App : Avalonia.Application
         // ---- Composition root: the ONLY place dependencies are wired ----
         var provider = ConfigureServices();
 
-        // Create / update the SQLite database before anything reads from it.
+        // Startup initialization (Infrastructure): applies migrations and adds any missing
+        // demo data. Non-destructive - the database is never recreated or overwritten.
         provider.InitializeDatabase();
-
-        // Demo data (seeded through repository interfaces; Domain stays out of Desktop)
-        DemoDataSeeder.SeedAsync(
-            provider.GetRequiredService<IStudentRepository>(),
-            provider.GetRequiredService<IEquipmentRepository>()).Wait();
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
