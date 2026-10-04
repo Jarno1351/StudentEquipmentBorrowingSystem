@@ -38,6 +38,16 @@ namespace Applications
             });
         }
 
+        public async Task<IEnumerable<EquipmentDto>> GetAvailableEquipmentAsync(CancellationToken cancellationToken = default)
+        {
+            var equipment = await _equipmentRepository.GetAvailableAsync(cancellationToken);
+            return equipment.Select(e => new EquipmentDto
+            {
+                Id = e.Id,
+                EquipmentName = e.EquipmentName
+            });
+        }
+
         public async Task<IEnumerable<EquipmentItemDto>> GetEquipmentItemsAsync(CancellationToken cancellationToken = default)
         {
             var equipment = await _equipmentRepository.GetAllAsync(cancellationToken);

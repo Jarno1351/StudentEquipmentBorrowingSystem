@@ -22,6 +22,14 @@ namespace Infrastructure
             return await Task.FromResult(_equipment.FirstOrDefault(e => e.Id == id));
         }
 
+        public async Task<IEnumerable<Equipment>> GetAvailableAsync(CancellationToken cancellationToken = default)
+        {
+            return await Task.FromResult(_equipment
+                .Where(e => e.IsAvailable)
+                .OrderBy(e => e.EquipmentName)
+                .ToList());
+        }
+
         public async Task AddAsync(Equipment equipment, CancellationToken cancellationToken = default)
         {
             if (equipment == null)

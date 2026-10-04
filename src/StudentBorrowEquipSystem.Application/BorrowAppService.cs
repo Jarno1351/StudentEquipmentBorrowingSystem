@@ -75,24 +75,20 @@ namespace Applications
 
         public async Task<IEnumerable<BorrowDto>> GetActiveBorrowingsAsync(CancellationToken cancellationToken = default)
         {
-            var active = await _borrowRepository.GetAllAsync(cancellationToken);
-            var list = new List<BorrowDto>();
-            foreach (var b in active.Where(x => x.Status.ToString() == "Active"))
-            {
-                list.Add(new BorrowDto
-                {
-                    BorrowId = b.Id,
-                    StudentId = b.StudentBorrower.StudentID,
-                    StudentName = b.StudentBorrower.FullName,
-                    EquipmentId = b.EquipmentBorrowed.Id,
-                    EquipmentName = b.EquipmentBorrowed.EquipmentName,
-                    BorrowDate = b.BorrowDate,
-                    DueDate = b.DueDate,
-                    Status = b.Status.ToString()
-                });
-            }
+            // The repository filters and joins in the database; this method only maps to DTOs.
+            var active = await _borrowRepository.GetActiveAsync(cancellationToken);
 
-            return list;
+            return active.Select(b => new BorrowDto
+            {
+                BorrowId = b.Id,
+                StudentId = b.StudentBorrower.StudentID,
+                StudentName = b.StudentBorrower.FullName,
+                EquipmentId = b.EquipmentBorrowed.Id,
+                EquipmentName = b.EquipmentBorrowed.EquipmentName,
+                BorrowDate = b.BorrowDate,
+                DueDate = b.DueDate,
+                Status = b.Status.ToString()
+            }).ToList();
         }
     }
 }

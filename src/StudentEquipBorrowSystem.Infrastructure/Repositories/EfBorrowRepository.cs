@@ -53,6 +53,33 @@ namespace Infrastructure.Repositories
                 .ToListAsync(cancellationToken);
         }
 
+        // LINQ query 2 - current borrowings together with the related student and equipment.
+        // Include() becomes SQL joins to Students and Equipment; the filter and ordering run in
+        // the database, so returned borrows and the history rows never reach the application:
+        //   SELECT ... FROM Borrows JOIN Equipment ... JOIN Students ...
+        //   WHERE Status <> 1 ORDER BY DueDate
+        public async Task<IEnumerable<Borrow>> GetActiveAsync(CancellationToken cancellationToken = default)
+        {
+            return await _context.Borrows
+                .AsNoTracking()                       // read-only list for display
+                .Include(b => b.StudentBorrower)
+                .Include(b => b.EquipmentBorrowed)
+                .Where(b => b.Status != BorrowStatusEnum.Returned)
+                .OrderBy(b => b.DueDate)
+                .ToListAsync(cancellationToken);
+        }
+
+        // LINQ query 3 - how many items a student currently has on loan (the borrow-limit rule).
+        // Translated to a single aggregate, instead of loading the student's whole history:
+        //   SELECT COUNT(*) FROM Borrows WHERE StudentBorrower_StudentID = @id AND Status <> 1
+        public async Task<int> CountActiveByStudentAsync(string studentID, CancellationToken cancellationToken = default)
+        {
+            return await _context.Borrows
+                .CountAsync(b => b.StudentBorrower.StudentID == studentID
+                                 && b.Status != BorrowStatusEnum.Returned,
+                            cancellationToken);
+        }
+
         public async Task AddAsync(Borrow borrow, CancellationToken cancellationToken = default)
         {
             if (borrow == null)

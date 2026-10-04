@@ -29,6 +29,18 @@ namespace Infrastructure.Repositories
             return await _context.Equipment.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
         }
 
+        // LINQ query 1 - available equipment.
+        // The filter and the ordering are translated to SQL, so only available rows leave the database:
+        //   SELECT ... FROM Equipment WHERE IsAvailable ORDER BY EquipmentName
+        public async Task<IEnumerable<Equipment>> GetAvailableAsync(CancellationToken cancellationToken = default)
+        {
+            return await _context.Equipment
+                .AsNoTracking()                       // read-only list for display
+                .Where(e => e.IsAvailable)
+                .OrderBy(e => e.EquipmentName)
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task AddAsync(Equipment equipment, CancellationToken cancellationToken = default)
         {
             if (equipment == null)

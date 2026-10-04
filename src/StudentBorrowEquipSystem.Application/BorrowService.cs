@@ -26,10 +26,9 @@ namespace Applications
             if (equipment == null)
                 throw new ArgumentNullException(nameof(equipment));
 
-            // The active count is derived from stored borrow records, not an in-memory counter,
-            // so the limit is still enforced after the application restarts.
-            var studentBorrows = await _borrowRepository.GetByStudentAsync(student.StudentID, cancellationToken);
-            var activeCount = studentBorrows.Count(b => b.Status != BorrowStatusEnum.Returned);
+            // The active count comes from the stored borrow records (one aggregate query),
+            // not an in-memory counter, so the limit is still enforced after a restart.
+            var activeCount = await _borrowRepository.CountActiveByStudentAsync(student.StudentID, cancellationToken);
 
             if (!student.CanBorrowEquipment(activeCount))
                 throw new InvalidOperationException($"Student {student.StudentID} has reached the maximum borrow limit of {Student.MaxBorrowLimit}.");
@@ -66,10 +65,11 @@ namespace Applications
             await _equipmentRepository.UpdateAsync(equipment, cancellationToken);
         }
 
+        // "Active" means not yet returned, the same definition used by the repository queries.
         public async Task<IEnumerable<Borrow>> GetActiveBorrowsAsync(string studentID, CancellationToken cancellationToken = default)
         {
             var borrows = await _borrowRepository.GetByStudentAsync(studentID, cancellationToken);
-            return borrows.Where(b => b.Status == BorrowStatusEnum.Active);
+            return borrows.Where(b => b.Status != BorrowStatusEnum.Returned);
         }
 
         public async Task<IEnumerable<Borrow>> GetBorrowHistoryAsync(string studentID, CancellationToken cancellationToken = default)
@@ -77,12 +77,12 @@ namespace Applications
             return await _borrowRepository.GetByStudentAsync(studentID, cancellationToken);
         }
 
-        // Overdue is computed from the due date (Status stays Active until the item is returned).
+        // Overdue is computed from the due date: not yet returned and past its due date.
         public async Task<IEnumerable<Borrow>> GetOverdueBorrowsAsync(CancellationToken cancellationToken = default)
         {
             var now = DateTime.Now;
-            var borrows = await _borrowRepository.GetAllAsync(cancellationToken);
-            return borrows.Where(b => b.Status == BorrowStatusEnum.Active && b.DueDate < now);
+            var active = await _borrowRepository.GetActiveAsync(cancellationToken);
+            return active.Where(b => b.DueDate < now);
         }
     }
 }

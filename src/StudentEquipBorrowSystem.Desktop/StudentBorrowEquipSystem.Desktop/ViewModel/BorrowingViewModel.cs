@@ -69,10 +69,12 @@ public partial class BorrowingViewModel : ViewModelBase
             foreach (var s in Students) if (s.StudentID == keep) SelectedStudent = s;
     }
 
+    // Only equipment that can be borrowed right now is offered (a student requests an
+    // AVAILABLE item). The business rules in BorrowService still re-check availability.
     private async Task LoadEquipmentAsync()
     {
         Equipment.Clear();
-        var equipment = await _lookupService.GetAllEquipmentAsync();
+        var equipment = await _lookupService.GetAvailableEquipmentAsync();
         foreach (var e in equipment)
             Equipment.Add(e);
     }

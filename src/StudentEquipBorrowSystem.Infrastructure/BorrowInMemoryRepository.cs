@@ -32,6 +32,20 @@ namespace Infrastructure
             return await Task.FromResult(_borrows.Where(b => b.EquipmentBorrowed.Id == equipmentId).ToList());
         }
 
+        public async Task<IEnumerable<Borrow>> GetActiveAsync(CancellationToken cancellationToken = default)
+        {
+            return await Task.FromResult(_borrows
+                .Where(b => b.Status != BorrowStatusEnum.Returned)
+                .OrderBy(b => b.DueDate)
+                .ToList());
+        }
+
+        public async Task<int> CountActiveByStudentAsync(string studentID, CancellationToken cancellationToken = default)
+        {
+            return await Task.FromResult(_borrows.Count(b =>
+                b.StudentBorrower.StudentID == studentID && b.Status != BorrowStatusEnum.Returned));
+        }
+
         public async Task AddAsync(Borrow borrow, CancellationToken cancellationToken = default)
         {
             if (borrow == null)
