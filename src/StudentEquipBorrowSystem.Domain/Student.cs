@@ -15,6 +15,21 @@ namespace Domain
 
         private int currentBorrowedEquipmentCount = 0;
 
+        // Parameterless constructor for EF Core
+        private Student() { }
+
+        public Student(string studentID, string fullName, string college, string course, string yearLevel, string contactNumber, string? emailAddress, string? address)
+        {
+            StudentID = studentID;
+            FullName = fullName;
+            College = college;
+            Course = course;
+            YearLevel = yearLevel;
+            ContactNumber = contactNumber;
+            EmailAddress = emailAddress;
+            Address = address;
+        }
+
         public bool CanBorrowEquipment()
         {
             int maxBorrowLimit = 3; // Set the maximum borrow limit for students
@@ -30,18 +45,6 @@ namespace Domain
         {
             if (currentBorrowedEquipmentCount > 0)
                 currentBorrowedEquipmentCount--;
-        }
-
-        public Student(string studentID, string fullName, string college, string course, string yearLevel, string contactNumber, string? emailAddress, string? address)
-        {
-            StudentID = studentID;
-            FullName = fullName;
-            College = college;
-            Course = course;
-            YearLevel = yearLevel;
-            ContactNumber = contactNumber;
-            EmailAddress = emailAddress;
-            Address = address;
         }
     }
 }

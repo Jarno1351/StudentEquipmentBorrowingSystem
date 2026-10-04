@@ -12,6 +12,9 @@ namespace Domain
 
         public bool IsAvailable { get; private set; } = true;
 
+        // Parameterless constructor for EF Core
+        private Equipment() { }
+
         public Equipment(Guid id, string equipmentName, string equipmentType)
         {
             Id = id;

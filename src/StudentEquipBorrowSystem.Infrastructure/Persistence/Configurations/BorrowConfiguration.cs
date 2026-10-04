@@ -74,11 +74,6 @@ namespace Infrastructure.Persistence
 
             builder.HasIndex(b => b.DueDate)
                 .HasDatabaseName("IX_Borrows_DueDate");
-
-            // Composite index for finding active borrowings for a student
-            // Note: Composite index on foreign key + status for common query pattern
-            builder.HasIndex(b => new { StudentBorrowerId = b.StudentBorrower.StudentID, b.Status })
-                .HasDatabaseName("IX_Borrows_StudentID_Status");
         }
     }
 }

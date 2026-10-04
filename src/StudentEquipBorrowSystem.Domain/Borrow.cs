@@ -14,6 +14,9 @@ namespace Domain
         public DateTime? ReturnDate { get; private set; }
         public BorrowStatusEnum Status { get; private set; }
 
+        // Parameterless constructor for EF Core
+        private Borrow() { }
+
         public Borrow(Student studentBorrower, Equipment equipmentBorrowed, DateTime borrowDate, DateTime dueDate)
         {
             Id = Guid.NewGuid();
