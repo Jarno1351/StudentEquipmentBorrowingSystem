@@ -17,9 +17,9 @@ namespace Infrastructure
     /// Demo data produced (on an empty database):
     ///   Students   : 5 (one with no email, to show optional fields)
     ///   Equipment  : 8 (4 available, 4 borrowed)
-    ///   Borrowings : Juan  - 3 active borrows (AT the limit  -> a 4th borrow fails)
-    ///                Maria - 1 active borrow, past its due date (OVERDUE)
-    ///                Pedro - 1 returned borrow (history; the projector is available again)
+    ///   Borrowings : Travis - 3 active borrows (AT the limit  -> a 4th borrow fails)
+    ///                Maria  - 1 active borrow, past its due date (OVERDUE)
+    ///                Pedro  - 1 returned borrow (history; the projector is available again)
     ///                Brill and Ana - no borrows (use them for the successful borrow demo)
     /// </summary>
     public static class DemoDataSeeder
@@ -106,7 +106,7 @@ namespace Infrastructure
             if ((await borrows.GetAllAsync(ct)).Any())
                 return;
 
-            var juan = await students.GetByIdAsync("2022303110", ct);
+            var travis = await students.GetByIdAsync("2024303110", ct);
             var maria = await students.GetByIdAsync("2023304215", ct);
             var pedro = await students.GetByIdAsync("2021302087", ct);
 
@@ -116,16 +116,16 @@ namespace Infrastructure
             var speaker = await equipment.GetByIdAsync(Speaker, ct);
             var tripod = await equipment.GetByIdAsync(Tripod, ct);
 
-            if (juan == null || maria == null || pedro == null ||
+            if (travis == null || maria == null || pedro == null ||
                 camera == null || projector == null || laptop == null || speaker == null || tripod == null)
                 return;
 
             var now = DateTime.Now;
 
-            // Juan: 3 active borrows = at the borrow limit. Borrowing a 4th item must fail.
-            await AddActiveBorrowAsync(juan, laptop, now.AddDays(-1), now.AddDays(2), equipment, borrows, ct);
-            await AddActiveBorrowAsync(juan, speaker, now.AddDays(-1), now.AddDays(2), equipment, borrows, ct);
-            await AddActiveBorrowAsync(juan, tripod, now.AddDays(-1), now.AddDays(2), equipment, borrows, ct);
+            // Travis: 3 active borrows = at the borrow limit. Borrowing a 4th item must fail.
+            await AddActiveBorrowAsync(travis, laptop, now.AddDays(-1), now.AddDays(2), equipment, borrows, ct);
+            await AddActiveBorrowAsync(travis, speaker, now.AddDays(-1), now.AddDays(2), equipment, borrows, ct);
+            await AddActiveBorrowAsync(travis, tripod, now.AddDays(-1), now.AddDays(2), equipment, borrows, ct);
 
             // Maria: 1 active borrow that is past its due date (overdue).
             await AddActiveBorrowAsync(maria, camera, now.AddDays(-5), now.AddDays(-2), equipment, borrows, ct);

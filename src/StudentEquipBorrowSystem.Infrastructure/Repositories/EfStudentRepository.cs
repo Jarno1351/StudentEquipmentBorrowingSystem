@@ -21,9 +21,12 @@ namespace Infrastructure.Repositories
 
         public async Task<IEnumerable<Student>> GetAllAsync(CancellationToken cancellationToken = default)
         {
-            return await _context.Students.ToListAsync(cancellationToken);
+            return await _context.Students
+                .AsNoTracking()                       // only feeds the student dropdown
+                .ToListAsync(cancellationToken);
         }
 
+        // Intentionally TRACKED: the Student is attached to a new Borrow in BorrowService.
         public async Task<Student?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
         {
             return await _context.Students.FirstOrDefaultAsync(s => s.StudentID == id, cancellationToken);
@@ -52,12 +55,14 @@ namespace Infrastructure.Repositories
             if (student == null)
                 throw new ArgumentNullException(nameof(student));
 
-            var existing = await GetByIdAsync(student.StudentID, cancellationToken);
-            if (existing == null)
-                throw new InvalidOperationException($"Student with ID {student.StudentID} was not found.");
+            if (_context.Entry(student).State == EntityState.Detached)
+            {
+                if (!await ExistsAsync(student.StudentID, cancellationToken))
+                    throw new InvalidOperationException($"Student with ID {student.StudentID} was not found.");
 
-            _context.Entry(existing).State = EntityState.Detached;
-            _context.Students.Update(student);
+                _context.Students.Update(student);
+            }
+
             await _context.SaveChangesAsync(cancellationToken);
         }
 

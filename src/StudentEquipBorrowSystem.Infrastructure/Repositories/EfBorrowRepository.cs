@@ -22,11 +22,14 @@ namespace Infrastructure.Repositories
         public async Task<IEnumerable<Borrow>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             return await _context.Borrows
+                .AsNoTracking()                       // read-only list
                 .Include(b => b.StudentBorrower)
                 .Include(b => b.EquipmentBorrowed)
                 .ToListAsync(cancellationToken);
         }
 
+        // Intentionally TRACKED: BorrowService modifies the returned Borrow (MarkAsReturned)
+        // and its Equipment, then saves. The change tracker records exactly what changed.
         public async Task<Borrow?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
             return await _context.Borrows
@@ -38,6 +41,7 @@ namespace Infrastructure.Repositories
         public async Task<IEnumerable<Borrow>> GetByStudentAsync(string studentID, CancellationToken cancellationToken = default)
         {
             return await _context.Borrows
+                .AsNoTracking()                       // read-only history
                 .Include(b => b.StudentBorrower)
                 .Include(b => b.EquipmentBorrowed)
                 .Where(b => b.StudentBorrower.StudentID == studentID)
@@ -47,6 +51,7 @@ namespace Infrastructure.Repositories
         public async Task<IEnumerable<Borrow>> GetByEquipmentAsync(Guid equipmentId, CancellationToken cancellationToken = default)
         {
             return await _context.Borrows
+                .AsNoTracking()                       // read-only lookup
                 .Include(b => b.StudentBorrower)
                 .Include(b => b.EquipmentBorrowed)
                 .Where(b => b.EquipmentBorrowed.Id == equipmentId)
@@ -97,12 +102,17 @@ namespace Infrastructure.Repositories
             if (borrow == null)
                 throw new ArgumentNullException(nameof(borrow));
 
-            var existing = await GetByIdAsync(borrow.Id, cancellationToken);
-            if (existing == null)
-                throw new InvalidOperationException($"Borrow record {borrow.Id} was not found.");
+            // Tracked entity (loaded by GetByIdAsync): the change tracker already knows
+            // what changed, so SaveChanges writes only those columns.
+            if (_context.Entry(borrow).State == EntityState.Detached)
+            {
+                if (!await ExistsAsync(borrow.Id, cancellationToken))
+                    throw new InvalidOperationException($"Borrow record {borrow.Id} was not found.");
 
-            _context.Entry(existing).State = EntityState.Detached;
-            _context.Borrows.Update(borrow);
+                // Detached copy: mark only the Borrow as modified, not the Student/Equipment graph.
+                _context.Entry(borrow).State = EntityState.Modified;
+            }
+
             await _context.SaveChangesAsync(cancellationToken);
         }
 

@@ -21,9 +21,13 @@ namespace Infrastructure.Repositories
 
         public async Task<IEnumerable<Equipment>> GetAllAsync(CancellationToken cancellationToken = default)
         {
-            return await _context.Equipment.ToListAsync(cancellationToken);
+            return await _context.Equipment
+                .AsNoTracking()                       // catalogue list is display-only
+                .ToListAsync(cancellationToken);
         }
 
+        // Intentionally TRACKED: BorrowService modifies the result (MarkAsBorrowed/MarkAsReturned)
+        // and a new Borrow references it.
         public async Task<Equipment?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
             return await _context.Equipment.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
@@ -58,12 +62,14 @@ namespace Infrastructure.Repositories
             if (equipment == null)
                 throw new ArgumentNullException(nameof(equipment));
 
-            var existing = await GetByIdAsync(equipment.Id, cancellationToken);
-            if (existing == null)
-                throw new InvalidOperationException($"Equipment {equipment.Id} was not found.");
+            if (_context.Entry(equipment).State == EntityState.Detached)
+            {
+                if (!await ExistsAsync(equipment.Id, cancellationToken))
+                    throw new InvalidOperationException($"Equipment {equipment.Id} was not found.");
 
-            _context.Entry(existing).State = EntityState.Detached;
-            _context.Equipment.Update(equipment);
+                _context.Equipment.Update(equipment);
+            }
+
             await _context.SaveChangesAsync(cancellationToken);
         }
 

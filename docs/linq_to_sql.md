@@ -116,7 +116,7 @@ _context.Borrows
 ### Generated SQL
 
 ```sql
--- parameter: @studentID = '2022303110'
+-- parameter: @studentID = '2024303110'
 SELECT COUNT(*)
 FROM "Borrows" AS "b"
 WHERE "b"."StudentBorrower_StudentID" = @studentID AND "b"."Status" <> 1
@@ -149,3 +149,32 @@ the enum and date comparisons depend on how the columns are stored (`INTEGER` an
 whether a query is fast depends on indexes such as `IX_Borrows_Status`, `IX_Borrows_DueDate` and
 `IX_Equipment_IsAvailable` that were defined in the entity configurations. `EXPLAIN QUERY PLAN`
 in SQLite shows whether an index is used.
+
+---
+
+## Tracking vs. no tracking
+
+EF Core's change tracker remembers every entity a query returns, so it can detect changes
+and write them on `SaveChangesAsync()`. That has a cost, and it is only worth paying when
+the entity will be modified.
+
+### Display-only: `AsNoTracking()`
+
+`GetAvailableAsync`, `GetActiveAsync`, and the `GetAll...` / history queries only fill lists
+on screen. Nothing is changed or saved, so tracking would waste memory and time. This
+matters more here because the `DbContext` is a singleton: tracked entities would stay in
+memory for the lifetime of the app, and a later tracking query would hand back the old
+tracked instance instead of fresh values. `AsNoTracking()` does not change the generated
+SQL, only what EF Core remembers afterwards.
+
+### Modified: tracking kept
+
+`ReturnEquipmentAsync` loads a `Borrow` (with its `Equipment`) through `GetByIdAsync`, then
+calls `MarkAsReturned()` on both. These loads are tracked, so EF Core records which
+properties changed (`Status`, `ReturnDate`, `IsAvailable`), and `SaveChangesAsync()` issues
+an `UPDATE` for only those columns. Tracking is also required in `BorrowEquipmentAsync`:
+the `Student` and `Equipment` must be tracked so that adding the new `Borrow` links to the
+existing rows instead of trying to insert them again.
+
+`UpdateAsync` now saves the tracked instance directly. It only falls back to marking the
+entity as modified if a detached copy is passed in.
