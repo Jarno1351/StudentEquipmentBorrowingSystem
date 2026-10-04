@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Infrastructure.Repositories
 {
@@ -17,69 +19,69 @@ namespace Infrastructure.Repositories
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public IEnumerable<Borrow> GetAll()
+        public async Task<IEnumerable<Borrow>> GetAllAsync(CancellationToken cancellationToken = default)
         {
-            return _context.Borrows
+            return await _context.Borrows
                 .Include(b => b.StudentBorrower)
                 .Include(b => b.EquipmentBorrowed)
-                .ToList();
+                .ToListAsync(cancellationToken);
         }
 
-        public Borrow GetById(Guid id)
+        public async Task<Borrow?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            return _context.Borrows
+            return await _context.Borrows
                 .Include(b => b.StudentBorrower)
                 .Include(b => b.EquipmentBorrowed)
-                .FirstOrDefault(b => b.Id == id);
+                .FirstOrDefaultAsync(b => b.Id == id, cancellationToken);
         }
 
-        public IEnumerable<Borrow> GetByStudent(string studentID)
+        public async Task<IEnumerable<Borrow>> GetByStudentAsync(string studentID, CancellationToken cancellationToken = default)
         {
-            return _context.Borrows
+            return await _context.Borrows
                 .Include(b => b.StudentBorrower)
                 .Include(b => b.EquipmentBorrowed)
                 .Where(b => b.StudentBorrower.StudentID == studentID)
-                .ToList();
+                .ToListAsync(cancellationToken);
         }
 
-        public IEnumerable<Borrow> GetByEquipment(Guid equipmentId)
+        public async Task<IEnumerable<Borrow>> GetByEquipmentAsync(Guid equipmentId, CancellationToken cancellationToken = default)
         {
-            return _context.Borrows
+            return await _context.Borrows
                 .Include(b => b.StudentBorrower)
                 .Include(b => b.EquipmentBorrowed)
                 .Where(b => b.EquipmentBorrowed.Id == equipmentId)
-                .ToList();
+                .ToListAsync(cancellationToken);
         }
 
-        public void Add(Borrow borrow)
+        public async Task AddAsync(Borrow borrow, CancellationToken cancellationToken = default)
         {
             if (borrow == null)
                 throw new ArgumentNullException(nameof(borrow));
 
-            if (Exists(borrow.Id))
+            if (await ExistsAsync(borrow.Id, cancellationToken))
                 throw new InvalidOperationException($"Borrow record {borrow.Id} already exists.");
 
             _context.Borrows.Add(borrow);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync(cancellationToken);
         }
 
-        public void Update(Borrow borrow)
+        public async Task UpdateAsync(Borrow borrow, CancellationToken cancellationToken = default)
         {
             if (borrow == null)
                 throw new ArgumentNullException(nameof(borrow));
 
-            var existing = GetById(borrow.Id);
+            var existing = await GetByIdAsync(borrow.Id, cancellationToken);
             if (existing == null)
                 throw new InvalidOperationException($"Borrow record {borrow.Id} was not found.");
 
             _context.Entry(existing).State = EntityState.Detached;
             _context.Borrows.Update(borrow);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync(cancellationToken);
         }
 
-        public bool Exists(Guid id)
+        public async Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            return _context.Borrows.Any(b => b.Id == id);
+            return await _context.Borrows.AnyAsync(b => b.Id == id, cancellationToken);
         }
     }
 }

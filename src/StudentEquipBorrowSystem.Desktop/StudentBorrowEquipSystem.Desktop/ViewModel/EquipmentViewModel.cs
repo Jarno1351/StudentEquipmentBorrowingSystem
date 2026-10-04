@@ -1,5 +1,6 @@
 using Applications;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 
 namespace StudentBorrowEquipSystem.Desktop.ViewModels;
 
@@ -12,15 +13,16 @@ public partial class EquipmentViewModel : ViewModelBase
     public EquipmentViewModel(ILookupAppService lookupService)
     {
         _lookupService = lookupService;
-        LoadEquipment();
+        LoadEquipmentAsync().Wait();
     }
 
-    public override void OnNavigatedTo() => LoadEquipment();
+    public override void OnNavigatedTo() => LoadEquipmentAsync().Wait();
 
-    private void LoadEquipment()
+    private async Task LoadEquipmentAsync()
     {
         Equipment.Clear();
-        foreach (var e in _lookupService.GetEquipmentItems())
+        var items = await _lookupService.GetEquipmentItemsAsync();
+        foreach (var e in items)
         {
             Equipment.Add(new EquipmentItemViewModel
             {

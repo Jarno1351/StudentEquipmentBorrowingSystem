@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Applications
 {
@@ -14,7 +16,7 @@ namespace Applications
             _borrowRepository = borrowRepository ?? throw new ArgumentNullException(nameof(borrowRepository));
         }
 
-        public Borrow BorrowEquipment(Student student, Equipment equipment, DateTime dueDate)
+        public async Task<Borrow> BorrowEquipmentAsync(Student student, Equipment equipment, DateTime dueDate, CancellationToken cancellationToken = default)
         {
             if (student == null)
                 throw new ArgumentNullException(nameof(student));
@@ -33,14 +35,14 @@ namespace Applications
             equipment.MarkAsBorrowed();
             student.IncrementBorrowedCount();
 
-            _borrowRepository.Add(borrow);
+            await _borrowRepository.AddAsync(borrow, cancellationToken);
 
             return borrow;
         }
 
-        public void ReturnEquipment(Guid borrowId, DateTime returnDate)
+        public async Task ReturnEquipmentAsync(Guid borrowId, DateTime returnDate, CancellationToken cancellationToken = default)
         {
-            var borrow = _borrowRepository.GetById(borrowId);
+            var borrow = await _borrowRepository.GetByIdAsync(borrowId, cancellationToken);
             if (borrow == null)
                 throw new InvalidOperationException($"Borrow record {borrowId} was not found.");
 
@@ -51,25 +53,25 @@ namespace Applications
             borrow.EquipmentBorrowed.MarkAsReturned();
             borrow.StudentBorrower.DecrementBorrowedCount();
 
-            _borrowRepository.Update(borrow);
+            await _borrowRepository.UpdateAsync(borrow, cancellationToken);
         }
 
-        public IEnumerable<Borrow> GetActiveBorrows(string studentID)
+        public async Task<IEnumerable<Borrow>> GetActiveBorrowsAsync(string studentID, CancellationToken cancellationToken = default)
         {
-            return _borrowRepository.GetByStudent(studentID)
-                .Where(b => b.Status == BorrowStatusEnum.Active);
+            var borrows = await _borrowRepository.GetByStudentAsync(studentID, cancellationToken);
+            return borrows.Where(b => b.Status == BorrowStatusEnum.Active);
         }
 
-        public IEnumerable<Borrow> GetBorrowHistory(string studentID)
+        public async Task<IEnumerable<Borrow>> GetBorrowHistoryAsync(string studentID, CancellationToken cancellationToken = default)
         {
-            return _borrowRepository.GetByStudent(studentID);
+            return await _borrowRepository.GetByStudentAsync(studentID, cancellationToken);
         }
 
-        public IEnumerable<Borrow> GetOverdueBorrows()
+        public async Task<IEnumerable<Borrow>> GetOverdueBorrowsAsync(CancellationToken cancellationToken = default)
         {
             var now = DateTime.Now;
-            return _borrowRepository.GetAll()
-                .Where(b => b.Status == BorrowStatusEnum.Active && b.DueDate < now);
+            var borrows = await _borrowRepository.GetAllAsync(cancellationToken);
+            return borrows.Where(b => b.Status == BorrowStatusEnum.Active && b.DueDate < now);
         }
     }
 }

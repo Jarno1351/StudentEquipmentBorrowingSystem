@@ -1,4 +1,7 @@
 ﻿using Domain;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Applications
 {
@@ -10,9 +13,10 @@ namespace Applications
         {
             _studentRepo = studentRepo;
         }
-        public void RegisterStudent(string studentId, string fullName, string college, string course, string yearLevel, string? contactNumber, string? emailAddress, string? address)
+
+        public async Task RegisterStudentAsync(string studentId, string fullName, string college, string course, string yearLevel, string? contactNumber, string? emailAddress, string? address, CancellationToken cancellationToken = default)
         {
-            if (!isStudentInfoValid(studentId, fullName, college, course, yearLevel, contactNumber, emailAddress, address))
+            if (!isStudentInfoValid(studentId, fullName, college, course, yearLevel, contactNumber, emailAddress, address, cancellationToken).Result)
             {
                 Console.WriteLine("Failed to register student. Please check the provided information.");
                 return;
@@ -27,11 +31,10 @@ namespace Applications
                 contactNumber ?? "",
                 emailAddress, address);
 
-            _studentRepo.Add(student);
-
+            await _studentRepo.AddAsync(student, cancellationToken);
         }
 
-        private bool isStudentInfoValid(string studentId, string fullName, string college, string course, string yearLevel, string? contactNumber, string? emailAddress, string? address)
+        private async Task<bool> isStudentInfoValid(string studentId, string fullName, string college, string course, string yearLevel, string? contactNumber, string? emailAddress, string? address, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(studentId) || string.IsNullOrWhiteSpace(fullName))
             {
@@ -73,16 +76,14 @@ namespace Applications
                 Console.WriteLine("Address filled is blank.");
                 return false;
             }
-            if (_studentRepo.GetById(studentId) != null)
+            if (await _studentRepo.GetByIdAsync(studentId, cancellationToken) != null)
             {
                 Console.WriteLine("Student with the same ID already exists.");
                 return false;
             }
-       
 
             return true;
         }
-
 
         private bool IsValidEmailAddress(string emailAddress)
         // validates the email address format
@@ -97,6 +98,7 @@ namespace Applications
                 return false;
             }
         }
+
         private bool IsValidContactNumber(string contactNumber)
         // validates the contact number format
         {
@@ -105,10 +107,9 @@ namespace Applications
             return true;
         }
 
-        public Student? GetStudentById(string studentId)
+        public async Task<Student?> GetStudentByIdAsync(string studentId, CancellationToken cancellationToken = default)
         {
-            return _studentRepo.GetById(studentId);
+            return await _studentRepo.GetByIdAsync(studentId, cancellationToken);
         }
-
     }
 }

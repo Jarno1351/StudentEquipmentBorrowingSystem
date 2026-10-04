@@ -20,9 +20,9 @@ public partial class App : Avalonia.Application
         var provider = ConfigureServices();
 
         // Demo data (seeded through repository interfaces; Domain stays out of Desktop)
-        DemoDataSeeder.Seed(
+        DemoDataSeeder.SeedAsync(
             provider.GetRequiredService<IStudentRepository>(),
-            provider.GetRequiredService<IEquipmentRepository>());
+            provider.GetRequiredService<IEquipmentRepository>()).Wait();
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {

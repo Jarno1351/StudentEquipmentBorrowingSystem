@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Applications.Dto;
 
 namespace Applications
@@ -6,12 +9,12 @@ namespace Applications
     public interface IBorrowAppService
     {
         /// Borrow equipment by IDs. Returns a DTO describing success or failure.
-        BorrowResultDto BorrowEquipment(string studentId, Guid equipmentId, DateTime dueDate);
+        Task<BorrowResultDto> BorrowEquipmentAsync(string studentId, Guid equipmentId, DateTime dueDate, CancellationToken cancellationToken = default);
 
         /// Return equipment by borrow id and return date. Returns result DTO.
-        BorrowResultDto ReturnEquipment(Guid borrowId, DateTime returnDate);
+        Task<BorrowResultDto> ReturnEquipmentAsync(Guid borrowId, DateTime returnDate, CancellationToken cancellationToken = default);
 
         /// Get all active borrowings in DTO form.
-        System.Collections.Generic.IEnumerable<BorrowDto> GetActiveBorrowings();
+        Task<IEnumerable<BorrowDto>> GetActiveBorrowingsAsync(CancellationToken cancellationToken = default);
     }
 }

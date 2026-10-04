@@ -1,12 +1,14 @@
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Applications.Dto;
 
 namespace Applications
 {
     public interface ILookupAppService
     {
-        IEnumerable<StudentDto> GetAllStudents();
-        IEnumerable<EquipmentDto> GetAllEquipment();
-        IEnumerable<EquipmentItemDto> GetEquipmentItems();
+        Task<IEnumerable<StudentDto>> GetAllStudentsAsync(CancellationToken cancellationToken = default);
+        Task<IEnumerable<EquipmentDto>> GetAllEquipmentAsync(CancellationToken cancellationToken = default);
+        Task<IEnumerable<EquipmentItemDto>> GetEquipmentItemsAsync(CancellationToken cancellationToken = default);
     }
 }

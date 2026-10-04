@@ -1,8 +1,10 @@
-﻿using Applications;
+using Applications;
 using Domain;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Infrastructure
 {
@@ -10,43 +12,45 @@ namespace Infrastructure
     {
         private readonly List<Equipment> _equipment = new List<Equipment>();
 
-        public IEnumerable<Equipment> GetAll()
+        public async Task<IEnumerable<Equipment>> GetAllAsync(CancellationToken cancellationToken = default)
         {
-            return _equipment.ToList();
+            return await Task.FromResult(_equipment.ToList());
         }
 
-        public Equipment GetById(Guid id)
+        public async Task<Equipment?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            return _equipment.FirstOrDefault(e => e.Id == id);
+            return await Task.FromResult(_equipment.FirstOrDefault(e => e.Id == id));
         }
 
-        public void Add(Equipment equipment)
+        public async Task AddAsync(Equipment equipment, CancellationToken cancellationToken = default)
         {
             if (equipment == null)
                 throw new ArgumentNullException(nameof(equipment));
 
-            if (Exists(equipment.Id))
+            if (await ExistsAsync(equipment.Id, cancellationToken))
                 throw new InvalidOperationException($"Equipment {equipment.Id} already exists.");
 
             _equipment.Add(equipment);
+            await Task.CompletedTask;
         }
 
-        public void Update(Equipment equipment)
+        public async Task UpdateAsync(Equipment equipment, CancellationToken cancellationToken = default)
         {
             if (equipment == null)
                 throw new ArgumentNullException(nameof(equipment));
 
-            var existing = GetById(equipment.Id);
+            var existing = await GetByIdAsync(equipment.Id, cancellationToken);
             if (existing == null)
                 throw new InvalidOperationException($"Equipment {equipment.Id} was not found.");
 
             _equipment.Remove(existing);
             _equipment.Add(equipment);
+            await Task.CompletedTask;
         }
 
-        public bool Exists(Guid id)
+        public async Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            return _equipment.Any(e => e.Id == id);
+            return await Task.FromResult(_equipment.Any(e => e.Id == id));
         }
     }
 }

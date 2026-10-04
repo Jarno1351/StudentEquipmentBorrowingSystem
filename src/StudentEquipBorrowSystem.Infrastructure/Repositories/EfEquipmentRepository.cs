@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Infrastructure.Repositories
 {
@@ -17,45 +19,45 @@ namespace Infrastructure.Repositories
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public IEnumerable<Equipment> GetAll()
+        public async Task<IEnumerable<Equipment>> GetAllAsync(CancellationToken cancellationToken = default)
         {
-            return _context.Equipment.ToList();
+            return await _context.Equipment.ToListAsync(cancellationToken);
         }
 
-        public Equipment GetById(Guid id)
+        public async Task<Equipment?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            return _context.Equipment.FirstOrDefault(e => e.Id == id);
+            return await _context.Equipment.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
         }
 
-        public void Add(Equipment equipment)
+        public async Task AddAsync(Equipment equipment, CancellationToken cancellationToken = default)
         {
             if (equipment == null)
                 throw new ArgumentNullException(nameof(equipment));
 
-            if (Exists(equipment.Id))
+            if (await ExistsAsync(equipment.Id, cancellationToken))
                 throw new InvalidOperationException($"Equipment {equipment.Id} already exists.");
 
             _context.Equipment.Add(equipment);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync(cancellationToken);
         }
 
-        public void Update(Equipment equipment)
+        public async Task UpdateAsync(Equipment equipment, CancellationToken cancellationToken = default)
         {
             if (equipment == null)
                 throw new ArgumentNullException(nameof(equipment));
 
-            var existing = GetById(equipment.Id);
+            var existing = await GetByIdAsync(equipment.Id, cancellationToken);
             if (existing == null)
                 throw new InvalidOperationException($"Equipment {equipment.Id} was not found.");
 
             _context.Entry(existing).State = EntityState.Detached;
             _context.Equipment.Update(equipment);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync(cancellationToken);
         }
 
-        public bool Exists(Guid id)
+        public async Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default)
         {
-            return _context.Equipment.Any(e => e.Id == id);
+            return await _context.Equipment.AnyAsync(e => e.Id == id, cancellationToken);
         }
     }
 }

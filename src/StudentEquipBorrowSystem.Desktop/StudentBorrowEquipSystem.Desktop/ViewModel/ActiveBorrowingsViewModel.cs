@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 
 namespace StudentBorrowEquipSystem.Desktop.ViewModels;
 
@@ -35,33 +36,34 @@ public partial class ActiveBorrowingsViewModel : ViewModelBase
     public ActiveBorrowingsViewModel(IBorrowAppService borrowAppService)
     {
         _borrowAppService = borrowAppService;
-        LoadActiveBorrowings();
+        LoadActiveBorrowingsAsync().Wait();
     }
 
-    public override void OnNavigatedTo() => LoadActiveBorrowings();
+    public override void OnNavigatedTo() => LoadActiveBorrowingsAsync().Wait();
 
-    public void LoadActiveBorrowings()
+    private async Task LoadActiveBorrowingsAsync()
     {
         ActiveBorrowings.Clear();
-        foreach (var b in _borrowAppService.GetActiveBorrowings())
+        var borrowings = await _borrowAppService.GetActiveBorrowingsAsync();
+        foreach (var b in borrowings)
             ActiveBorrowings.Add(b);
     }
 
     private bool CanReturn() => ValidationMessage == null;
 
     [RelayCommand(CanExecute = nameof(CanReturn))]
-    private void ReturnSelected()
+    private async Task ReturnSelected()
     {
         var problem = ValidationMessage;
         if (problem != null) { ShowError(problem); return; }
 
         try
         {
-            var result = _borrowAppService.ReturnEquipment(SelectedBorrow!.BorrowId, ReturnDate!.Value);
+            var result = await _borrowAppService.ReturnEquipmentAsync(SelectedBorrow!.BorrowId, ReturnDate!.Value);
 
             if (result.Success)
             {
-                LoadActiveBorrowings();
+                await LoadActiveBorrowingsAsync();
                 ShowSuccess("Equipment returned successfully.");
             }
             else

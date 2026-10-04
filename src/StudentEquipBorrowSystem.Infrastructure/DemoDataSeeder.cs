@@ -1,4 +1,6 @@
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Applications;
 using Domain;
 
@@ -8,14 +10,14 @@ namespace Infrastructure
     /// Lives in Infrastructure so the Desktop project never needs a Domain reference.
     public static class DemoDataSeeder
     {
-        public static void Seed(IStudentRepository students, IEquipmentRepository equipment)
+        public static async Task SeedAsync(IStudentRepository students, IEquipmentRepository equipment, CancellationToken cancellationToken = default)
         {
-            if (!students.Exists("2022303102"))
+            if (!await students.ExistsAsync("2022303102", cancellationToken))
             {
-                students.Add(new Student(
+                await students.AddAsync(new Student(
                     "2022303102", "Brill Jarn T. Barazan",
                     "College of Information Science in Computing", "BS in Information Technology",
-                    "3rd Year", "09171234567", "s.barazan.brilljarn@cmu.edu.ph", "Valencia City, Bukidnon"));
+                    "3rd Year", "09171234567", "s.barazan.brilljarn@cmu.edu.ph", "Valencia City, Bukidnon"), cancellationToken);
             }
 
             foreach (var (name, type) in new[]
@@ -24,8 +26,12 @@ namespace Infrastructure
                 ("Laptop", "Computer"), ("Speaker", "AV Equipment")
             })
             {
-                equipment.Add(new Equipment(Guid.NewGuid(), name, type));
+                if (!await equipment.ExistsAsync(Guid.Empty, cancellationToken))
+                {
+                    await equipment.AddAsync(new Equipment(Guid.NewGuid(), name, type), cancellationToken);
+                }
             }
         }
     }
 }
+

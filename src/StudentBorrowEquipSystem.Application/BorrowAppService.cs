@@ -1,10 +1,13 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Applications.Dto;
 using Domain;
 
 namespace Applications
 {
-  
     public class BorrowAppService : IBorrowAppService
     {
         private readonly IBorrowService _borrowService;
@@ -28,22 +31,22 @@ namespace Applications
             _borrowRepository = borrowRepository;
         }
 
-        public BorrowResultDto BorrowEquipment(string studentId, Guid equipmentId, DateTime dueDate)
+        public async Task<BorrowResultDto> BorrowEquipmentAsync(string studentId, Guid equipmentId, DateTime dueDate, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(studentId))
                 return new BorrowResultDto { Success = false, Message = "Student id is required." };
 
-            var student = _studentRepository.GetById(studentId);
+            var student = await _studentRepository.GetByIdAsync(studentId, cancellationToken);
             if (student == null)
                 return new BorrowResultDto { Success = false, Message = $"Student '{studentId}' not found." };
 
-            var equipment = _equipmentRepository.GetById(equipmentId);
+            var equipment = await _equipmentRepository.GetByIdAsync(equipmentId, cancellationToken);
             if (equipment == null)
                 return new BorrowResultDto { Success = false, Message = $"Equipment '{equipmentId}' not found." };
 
             try
             {
-                var borrow = _borrowService.BorrowEquipment(student, equipment, dueDate);
+                var borrow = await _borrowService.BorrowEquipmentAsync(student, equipment, dueDate, cancellationToken);
                 return new BorrowResultDto
                 {
                     Success = true,
@@ -57,11 +60,11 @@ namespace Applications
             }
         }
 
-        public BorrowResultDto ReturnEquipment(Guid borrowId, DateTime returnDate)
+        public async Task<BorrowResultDto> ReturnEquipmentAsync(Guid borrowId, DateTime returnDate, CancellationToken cancellationToken = default)
         {
             try
             {
-                _borrowService.ReturnEquipment(borrowId, returnDate);
+                await _borrowService.ReturnEquipmentAsync(borrowId, returnDate, cancellationToken);
                 return new BorrowResultDto { Success = true };
             }
             catch (Exception ex)
@@ -70,27 +73,23 @@ namespace Applications
             }
         }
 
-        public System.Collections.Generic.IEnumerable<BorrowDto> GetActiveBorrowings()
+        public async Task<IEnumerable<BorrowDto>> GetActiveBorrowingsAsync(CancellationToken cancellationToken = default)
         {
-            var now = DateTime.Now;
-            var active = _borrowRepository.GetAll();
-            var list = new System.Collections.Generic.List<BorrowDto>();
-            foreach (var b in active)
+            var active = await _borrowRepository.GetAllAsync(cancellationToken);
+            var list = new List<BorrowDto>();
+            foreach (var b in active.Where(x => x.Status.ToString() == "Active"))
             {
-                if (b.Status.ToString() == "Active")
+                list.Add(new BorrowDto
                 {
-                    list.Add(new BorrowDto
-                    {
-                        BorrowId = b.Id,
-                        StudentId = b.StudentBorrower.StudentID,
-                        StudentName = b.StudentBorrower.FullName,
-                        EquipmentId = b.EquipmentBorrowed.Id,
-                        EquipmentName = b.EquipmentBorrowed.EquipmentName,
-                        BorrowDate = b.BorrowDate,
-                        DueDate = b.DueDate,
-                        Status = b.Status.ToString()
-                    });
-                }
+                    BorrowId = b.Id,
+                    StudentId = b.StudentBorrower.StudentID,
+                    StudentName = b.StudentBorrower.FullName,
+                    EquipmentId = b.EquipmentBorrowed.Id,
+                    EquipmentName = b.EquipmentBorrowed.EquipmentName,
+                    BorrowDate = b.BorrowDate,
+                    DueDate = b.DueDate,
+                    Status = b.Status.ToString()
+                });
             }
 
             return list;

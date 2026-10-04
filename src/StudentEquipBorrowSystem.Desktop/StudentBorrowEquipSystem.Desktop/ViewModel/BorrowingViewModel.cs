@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 
 namespace StudentBorrowEquipSystem.Desktop.ViewModels;
 
@@ -47,49 +48,51 @@ public partial class BorrowingViewModel : ViewModelBase
     {
         _borrowAppService = borrowAppService;
         _lookupService = lookupService;
-        LoadStudents();
-        LoadEquipment();
+        LoadStudentsAsync().Wait();
+        LoadEquipmentAsync().Wait();
     }
 
     public override void OnNavigatedTo()
     {
-        LoadStudents();
-        LoadEquipment();
+        LoadStudentsAsync().Wait();
+        LoadEquipmentAsync().Wait();
     }
 
-    private void LoadStudents()
+    private async Task LoadStudentsAsync()
     {
         var keep = SelectedStudent?.StudentID;
         Students.Clear();
-        foreach (var s in _lookupService.GetAllStudents())
+        var students = await _lookupService.GetAllStudentsAsync();
+        foreach (var s in students)
             Students.Add(s);
         if (keep != null)
             foreach (var s in Students) if (s.StudentID == keep) SelectedStudent = s;
     }
 
-    private void LoadEquipment()
+    private async Task LoadEquipmentAsync()
     {
         Equipment.Clear();
-        foreach (var e in _lookupService.GetAllEquipment())
+        var equipment = await _lookupService.GetAllEquipmentAsync();
+        foreach (var e in equipment)
             Equipment.Add(e);
     }
 
     private bool CanBorrow() => ValidationMessage == null;
 
     [RelayCommand(CanExecute = nameof(CanBorrow))]
-    private void Borrow()
+    private async Task Borrow()
     {
         var problem = ValidationMessage;
         if (problem != null) { ShowError(problem); return; }
 
         try
         {
-            var result = _borrowAppService.BorrowEquipment(
+            var result = await _borrowAppService.BorrowEquipmentAsync(
                 SelectedStudent!.StudentID, SelectedEquipment!.Id, DueDate!.Value);
 
             if (result.Success)
             {
-                LoadEquipment();
+                await LoadEquipmentAsync();
                 SelectedEquipment = null;
                 DueDate = null;
                 ShowSuccess("Equipment borrowed successfully.");

@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Applications.Dto;
 using Domain;
 
@@ -16,27 +18,30 @@ namespace Applications
             _equipmentRepository = equipmentRepository;
         }
 
-        public IEnumerable<StudentDto> GetAllStudents()
+        public async Task<IEnumerable<StudentDto>> GetAllStudentsAsync(CancellationToken cancellationToken = default)
         {
-            return _studentRepository.GetAll().Select(s => new StudentDto
+            var students = await _studentRepository.GetAllAsync(cancellationToken);
+            return students.Select(s => new StudentDto
             {
                 StudentID = s.StudentID,
                 FullName = s.FullName
             });
         }
 
-        public IEnumerable<EquipmentDto> GetAllEquipment()
+        public async Task<IEnumerable<EquipmentDto>> GetAllEquipmentAsync(CancellationToken cancellationToken = default)
         {
-            return _equipmentRepository.GetAll().Select(e => new EquipmentDto
+            var equipment = await _equipmentRepository.GetAllAsync(cancellationToken);
+            return equipment.Select(e => new EquipmentDto
             {
                 Id = e.Id,
                 EquipmentName = e.EquipmentName
             });
         }
 
-        public IEnumerable<EquipmentItemDto> GetEquipmentItems()
+        public async Task<IEnumerable<EquipmentItemDto>> GetEquipmentItemsAsync(CancellationToken cancellationToken = default)
         {
-            return _equipmentRepository.GetAll().Select(e => new EquipmentItemDto
+            var equipment = await _equipmentRepository.GetAllAsync(cancellationToken);
+            return equipment.Select(e => new EquipmentItemDto
             {
                 Id = e.Id,
                 EquipmentName = e.EquipmentName,
