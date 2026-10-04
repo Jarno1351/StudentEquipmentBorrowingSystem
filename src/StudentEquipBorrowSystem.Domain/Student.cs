@@ -1,9 +1,9 @@
-﻿using System.Security.Cryptography.X509Certificates;
-
-namespace Domain
+﻿namespace Domain
 {
     public class Student
     {
+        public const int MaxBorrowLimit = 3;
+
         public string StudentID { get; private set; }
         public string FullName { get; private set; }
         public string College { get; private set; }
@@ -12,8 +12,6 @@ namespace Domain
         public string ContactNumber { get; private set; }
         public string? EmailAddress { get; private set; }
         public string? Address { get; private set; }
-
-        private int currentBorrowedEquipmentCount = 0;
 
         // Parameterless constructor for EF Core
         private Student() { }
@@ -30,21 +28,14 @@ namespace Domain
             Address = address;
         }
 
-        public bool CanBorrowEquipment()
+        /// <summary>
+        /// The borrow limit rule. The active count is supplied by the Application layer
+        /// (derived from stored Borrow records), so the rule works with any storage
+        /// and survives application restarts.
+        /// </summary>
+        public bool CanBorrowEquipment(int activeBorrowCount)
         {
-            int maxBorrowLimit = 3; // Set the maximum borrow limit for students
-            return currentBorrowedEquipmentCount < maxBorrowLimit;
-        }
-
-        public void IncrementBorrowedCount()
-        {
-            currentBorrowedEquipmentCount++;
-        }
-
-        public void DecrementBorrowedCount()
-        {
-            if (currentBorrowedEquipmentCount > 0)
-                currentBorrowedEquipmentCount--;
+            return activeBorrowCount < MaxBorrowLimit;
         }
     }
 }

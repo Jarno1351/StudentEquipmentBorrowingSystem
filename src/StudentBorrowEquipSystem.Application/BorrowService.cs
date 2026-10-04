@@ -10,10 +10,12 @@ namespace Applications
     public class BorrowService : IBorrowService
     {
         private readonly IBorrowRepository _borrowRepository;
+        private readonly IEquipmentRepository _equipmentRepository;
 
-        public BorrowService(IBorrowRepository borrowRepository)
+        public BorrowService(IBorrowRepository borrowRepository, IEquipmentRepository equipmentRepository)
         {
             _borrowRepository = borrowRepository ?? throw new ArgumentNullException(nameof(borrowRepository));
+            _equipmentRepository = equipmentRepository ?? throw new ArgumentNullException(nameof(equipmentRepository));
         }
 
         public async Task<Borrow> BorrowEquipmentAsync(Student student, Equipment equipment, DateTime dueDate, CancellationToken cancellationToken = default)
@@ -24,18 +26,23 @@ namespace Applications
             if (equipment == null)
                 throw new ArgumentNullException(nameof(equipment));
 
-            if (!student.CanBorrowEquipment())
-                throw new InvalidOperationException($"Student {student.StudentID} has reached the maximum borrow limit.");
+            // The active count is derived from stored borrow records, not an in-memory counter,
+            // so the limit is still enforced after the application restarts.
+            var studentBorrows = await _borrowRepository.GetByStudentAsync(student.StudentID, cancellationToken);
+            var activeCount = studentBorrows.Count(b => b.Status != BorrowStatusEnum.Returned);
+
+            if (!student.CanBorrowEquipment(activeCount))
+                throw new InvalidOperationException($"Student {student.StudentID} has reached the maximum borrow limit of {Student.MaxBorrowLimit}.");
 
             if (!equipment.IsAvailable)
                 throw new InvalidOperationException($"Equipment '{equipment.EquipmentName}' is not available for borrowing.");
 
             var borrow = new Borrow(student, equipment, DateTime.Now, dueDate);
-
-            equipment.MarkAsBorrowed();
-            student.IncrementBorrowedCount();
-
             await _borrowRepository.AddAsync(borrow, cancellationToken);
+
+            // Persist the equipment status through its own repository.
+            equipment.MarkAsBorrowed();
+            await _equipmentRepository.UpdateAsync(equipment, cancellationToken);
 
             return borrow;
         }
@@ -49,11 +56,14 @@ namespace Applications
             if (borrow.Status == BorrowStatusEnum.Returned)
                 throw new InvalidOperationException("This equipment has already been returned.");
 
-            borrow.MarkAsReturned(returnDate);
-            borrow.EquipmentBorrowed.MarkAsReturned();
-            borrow.StudentBorrower.DecrementBorrowedCount();
+            var equipment = borrow.EquipmentBorrowed;
 
+            borrow.MarkAsReturned(returnDate);
             await _borrowRepository.UpdateAsync(borrow, cancellationToken);
+
+            // Persist the equipment status through its own repository.
+            equipment.MarkAsReturned();
+            await _equipmentRepository.UpdateAsync(equipment, cancellationToken);
         }
 
         public async Task<IEnumerable<Borrow>> GetActiveBorrowsAsync(string studentID, CancellationToken cancellationToken = default)
@@ -67,6 +77,7 @@ namespace Applications
             return await _borrowRepository.GetByStudentAsync(studentID, cancellationToken);
         }
 
+        // Overdue is computed from the due date (Status stays Active until the item is returned).
         public async Task<IEnumerable<Borrow>> GetOverdueBorrowsAsync(CancellationToken cancellationToken = default)
         {
             var now = DateTime.Now;

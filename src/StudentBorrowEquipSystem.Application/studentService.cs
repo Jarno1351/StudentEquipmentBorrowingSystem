@@ -1,5 +1,6 @@
 ﻿using Domain;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,7 +17,7 @@ namespace Applications
 
         public async Task RegisterStudentAsync(string studentId, string fullName, string college, string course, string yearLevel, string? contactNumber, string? emailAddress, string? address, CancellationToken cancellationToken = default)
         {
-            if (!isStudentInfoValid(studentId, fullName, college, course, yearLevel, contactNumber, emailAddress, address, cancellationToken).Result)
+            if (!await isStudentInfoValid(studentId, fullName, college, course, yearLevel, contactNumber, emailAddress, address, cancellationToken))
             {
                 Console.WriteLine("Failed to register student. Please check the provided information.");
                 return;
@@ -100,11 +101,11 @@ namespace Applications
         }
 
         private bool IsValidContactNumber(string contactNumber)
-        // validates the contact number format
+        // validates the contact number format: 11 digits, starting with 0
         {
-            if (contactNumber.Length != 11 && !contactNumber.StartsWith("0"))
-            { return false; }
-            return true;
+            return contactNumber.Length == 11
+                && contactNumber.StartsWith("0")
+                && contactNumber.All(char.IsDigit);
         }
 
         public async Task<Student?> GetStudentByIdAsync(string studentId, CancellationToken cancellationToken = default)

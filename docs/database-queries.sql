@@ -103,16 +103,20 @@ WHERE Id = '00000000-0000-0000-0000-000000000001';
 -- ============================================================================
 
 -- Find overdue borrowings
+-- The application computes "overdue" from the due date (BorrowService.GetOverdueBorrowsAsync):
+-- a borrowing is overdue when it is still Active (Status = 0) and its due date has passed.
+-- Status = 2 (Overdue) is never written by the application, so it is not used here.
 SELECT
 	s.FullName AS Student,
 	s.ContactNumber,
 	e.EquipmentName,
 	b.DueDate,
-	CAST((julianday('now') - julianday(b.DueDate)) AS INTEGER) AS DaysOverdue
+	CAST((julianday('now', 'localtime') - julianday(b.DueDate)) AS INTEGER) AS DaysOverdue
 FROM Borrows AS b
 INNER JOIN Students AS s ON s.StudentID = b.StudentBorrower_StudentID
 INNER JOIN Equipment AS e ON e.Id = b.EquipmentBorrowed_Id
-WHERE b.Status = 2
+WHERE b.Status = 0
+  AND b.DueDate < datetime('now', 'localtime')
 ORDER BY b.DueDate ASC;
 
 

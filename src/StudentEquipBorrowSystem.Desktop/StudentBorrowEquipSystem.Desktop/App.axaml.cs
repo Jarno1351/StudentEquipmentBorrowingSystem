@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using StudentBorrowEquipSystem.Desktop.Navigation;
 using StudentBorrowEquipSystem.Desktop.ViewModels;
 using System;
+using System.IO;
 
 namespace StudentBorrowEquipSystem.Desktop;
 
@@ -18,6 +19,9 @@ public partial class App : Avalonia.Application
     {
         // ---- Composition root: the ONLY place dependencies are wired ----
         var provider = ConfigureServices();
+
+        // Create / update the SQLite database before anything reads from it.
+        provider.InitializeDatabase();
 
         // Demo data (seeded through repository interfaces; Domain stays out of Desktop)
         DemoDataSeeder.SeedAsync(
@@ -39,15 +43,17 @@ public partial class App : Avalonia.Application
     {
         IServiceCollection services = new ServiceCollection();
 
-        // Repositories (Infrastructure)
-        services.AddSingleton<IStudentRepository, StudentInMemoryRepository>();
-        services.AddSingleton<IEquipmentRepository, EquipmentInMemoryRepository>();
-        services.AddSingleton<IBorrowRepository, BorrowInMemoryRepository>();
+        // Persistence (Infrastructure). To change storage, change only this one line:
+        // swap AddSqlitePersistence for another registration that maps the same three
+        // repository interfaces (for example the in-memory repositories).
+        var dbPath = Path.Combine(AppContext.BaseDirectory, "EquipmentBorrowing.db");
+        services.AddSqlitePersistence($"Data Source={dbPath}");
 
         // Application services
         services.AddSingleton<IBorrowService, BorrowService>();
         services.AddSingleton<IBorrowAppService, BorrowAppService>();
         services.AddSingleton<ILookupAppService, LookupAppService>();
+        services.AddSingleton<StudentService>();
 
         // Navigation
         services.AddSingleton<INavigationService, NavigationService>();

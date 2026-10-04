@@ -16,7 +16,7 @@ namespace ConsoleDemo
             IStudentRepository studentRepository = new StudentInMemoryRepository();
             IEquipmentRepository equipmentRepository = new EquipmentInMemoryRepository();
             IBorrowRepository borrowRepository = new BorrowInMemoryRepository();
-            IBorrowService borrowService = new BorrowService(borrowRepository);
+            IBorrowService borrowService = new BorrowService(borrowRepository, equipmentRepository);
 
             // ---- Seed data ----
             var student = new Student(
