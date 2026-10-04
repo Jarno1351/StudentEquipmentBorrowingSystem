@@ -4,27 +4,51 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Persistence
 {
+    /// <summary>
+    /// Configures the Equipment entity mapping to the Equipment table.
+    /// </summary>
     public class EquipmentConfiguration : IEntityTypeConfiguration<Equipment>
     {
         public void Configure(EntityTypeBuilder<Equipment> builder)
         {
-            builder.HasKey(e => e.Id);
+            // Table mapping
+            builder.ToTable("Equipment");
 
+            // Primary Key
+            builder.HasKey(e => e.Id)
+                .HasName("PK_Equipment_Id");
+
+            // Properties with constraints
             builder.Property(e => e.Id)
-                .ValueGeneratedNever();
+                .HasColumnType("TEXT")
+                .ValueGeneratedNever()
+                .IsRequired()
+                .HasColumnName("Id");
 
             builder.Property(e => e.EquipmentName)
+                .HasColumnType("TEXT")
                 .HasMaxLength(200)
-                .IsRequired();
+                .IsRequired()
+                .HasColumnName("EquipmentName");
 
             builder.Property(e => e.EquipmentType)
+                .HasColumnType("TEXT")
                 .HasMaxLength(100)
-                .IsRequired();
+                .IsRequired()
+                .HasColumnName("EquipmentType");
 
             builder.Property(e => e.IsAvailable)
-                .HasDefaultValue(true);
+                .HasColumnType("INTEGER")
+                .HasDefaultValue(true)
+                .IsRequired()
+                .HasColumnName("IsAvailable");
 
-            builder.ToTable("Equipment");
+            // Indexes for common query patterns
+            builder.HasIndex(e => e.IsAvailable)
+                .HasDatabaseName("IX_Equipment_IsAvailable");
+
+            builder.HasIndex(e => e.EquipmentType)
+                .HasDatabaseName("IX_Equipment_EquipmentType");
         }
     }
 }
